@@ -1,38 +1,30 @@
-const express = require('express');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
-const app = express();
-
-const publicPath = path.join(__dirname, 'public');
-app.use(express.static(publicPath));
-
-// Read links.json
 const linksPath = path.join(__dirname, 'links.json');
 let links = {};
 
 try {
+  console.log('Looking for links.json at:', linksPath); // Debugging
   if (fs.existsSync(linksPath)) {
-    links = JSON.parse(fs.readFileSync(linksPath, 'utf8'));
+    const data = fs.readFileSync(linksPath, 'utf8');
+    console.log('Raw links.json content:', data); // Debugging
+    links = JSON.parse(data);
+    console.log('Parsed links:', links); // Debugging
+  } else {
+    console.log('links.json not found at:', linksPath); // Debugging
+    links = { background: '' }; // Fallback
   }
 } catch (error) {
-  console.error('Error reading links.json:', error);
+  console.log('Error reading or parsing links.json:', error); // Debugging
+  links = { background: '' }; // Fallback
 }
 
-app.get('/api', (req, res) => {
+module.exports = async (req, res) => {
   const background = links.background || '';
-  const extension = background.split('.').pop().toLowerCase();
-  const type = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension) ? 'image' : 'video';
-  
-  // Automatically add domain
-  const domain = 'https://ashishrayx-background.vercel.app'; // apna domain
-  const fullSource = background.startsWith('http') ? background : domain + background;
-
+  console.log('API response background:', background); // Debugging
   res.status(200).json({
-    source: fullSource,
-    type: type
+    source: background,
+    type: background.endsWith('.jpg') || background.endsWith('.png') ? 'image' : 'video'
   });
-});
-
-// Export for Vercel
-module.exports = app;
+};
