@@ -1,21 +1,23 @@
-const fs = require('fs');
-const path = require('path');
-
-module.exports = (req, res) => {
-  const linksPath = path.join(__dirname, '..', 'links.json');
-  let links = {};
-
-  try {
-    if (fs.existsSync(linksPath)) {
-      links = JSON.parse(fs.readFileSync(linksPath, 'utf8'));
+{
+  "rewrites": [
+    {
+      "source": "/api",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/public/$1"
     }
-  } catch (error) {
-    console.error('Error reading links.json:', error);
-  }
-
-  const background = links.background || '';
-  res.status(200).json({
-    source: background,
-    type: background.endsWith('.jpg') || background.endsWith('.png') ? 'image' : 'video'
-  });
-};
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
+}
