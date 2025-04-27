@@ -2,7 +2,9 @@
   "name": "ashishrayx-background",
   "version": "1.0.0",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "express": "^4.17.1"
+  },
   "scripts": {
     "start": "vercel dev"
   }
