@@ -1,41 +1,31 @@
 const fs = require('fs');
 const path = require('path');
+const express = require('express');
 
-module.exports = (req, res) => {
-    const filePath = path.join(__dirname, 'links.json');
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const data = JSON.parse(fileContent);
+const app = express();
 
-    let source = data.background;
-    let type = 'auto';
+// Serve static files from the public folder
+app.use(express.static(path.join(__dirname, 'public')));
 
-    // Detect platform and set type
-    if (source.includes('youtube.com') || source.includes('youtu.be')) {
-        type = 'youtube';
-    } else if (source.includes('vimeo.com')) {
-        type = 'vimeo';
-    } else if (source.includes('twitch.tv') || source.includes('twitch.tv/videos') || source.includes('stream')) {
-        type = 'livestream';
-    } else if (source.match(/\.(mp4|webm|mov|avi|mkv|3gp)$/i) || source.includes('video')) {
-        type = 'video';
-    } else if (source.match(/\.(jpg|jpeg|png|gif|bmp|svg)$/i) || source.includes('image')) {
-        type = 'image';
-    } else if (source.includes('facebook.com') || source.includes('fb.watch')) {
-        type = 'facebook';
-    } else if (source.includes('wa.me') || source.includes('whatsapp.com')) {
-        type = 'whatsapp';
-    } else if (source.includes('t.me') || source.includes('telegram.org')) {
-        type = 'telegram';
-    } else if (source.includes('x.com') || source.includes('twitter.com')) {
-        type = 'x';
-    } else if (source.includes('instagram.com')) {
-        type = 'instagram';
-    } else if (source.includes('threads.net')) {
-        type = 'threads';
-    } else {
-        type = 'unknown'; // Fallback for unsupported platforms
-    }
+// API endpoint to read links.json
+const linksPath = path.join(__dirname, 'links.json');
+let links = {};
 
-    // Return the source and type
-    res.status(200).json({ source, type });
-};
+try {
+  if (fs.existsSync(linksPath)) {
+    links = JSON.parse(fs.readFileSync(linksPath, 'utf8'));
+  }
+} catch (error) {
+  console.error('Error reading links.json:', error);
+}
+
+app.get('/api', (req, res) => {
+  const background = links.background || '';
+  res.status(200).json({
+    source: background,
+    type: background.endsWith('.jpg') || background.endsWith('.png') ? 'image' : 'video'
+  });
+});
+
+// Export for Vercel
+module.exports = app;
