@@ -1,13 +1,13 @@
-const fs = require('fs');
-const path = require('path');
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
-// Serve static files from the public folder
-app.use(express.static(path.join(__dirname, 'public')));
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
 
-// API endpoint to read links.json
+// Read links.json
 const linksPath = path.join(__dirname, 'links.json');
 let links = {};
 
@@ -21,9 +21,16 @@ try {
 
 app.get('/api', (req, res) => {
   const background = links.background || '';
+  const extension = background.split('.').pop().toLowerCase();
+  const type = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension) ? 'image' : 'video';
+  
+  // Automatically add domain
+  const domain = 'https://ashishrayx-background.vercel.app'; // apna domain
+  const fullSource = background.startsWith('http') ? background : domain + background;
+
   res.status(200).json({
-    source: background,
-    type: background.endsWith('.jpg') || background.endsWith('.png') ? 'image' : 'video'
+    source: fullSource,
+    type: type
   });
 });
 
